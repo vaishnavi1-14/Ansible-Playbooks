@@ -1,0 +1,35 @@
+- hosts: devlinux, qalinux
+  user: vnp
+  connection: ssh
+  become: yes
+
+  tasks:
+    - name: install_java
+      yum:
+        pkg: java-11-amazon-corretto.x86_64
+        state: present
+
+    - name: tomcat
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.94/bin/apache-tomcat-9.0.94.zip
+        dest: /mnt
+
+    - name: unarchive_zip
+      unarchive:
+        src: /mnt/apache-tomcat-9.0.94.zip
+        dest: /mnt
+        remote_src: yes
+
+    - name: permissions
+      shell: "chmod -R 777 /mnt/apache-tomcat-9.0.94"
+
+    - name: deploy_war
+      copy:
+        src: /mnt/projects/targets/*.war
+        dest: /mnt/apache-tomcat-9.0.94/webapps
+        remote_src: yes
+
+    - name: start_tomcat
+      shell: "./startup.sh"
+      args:
+        chdir: /mnt/apache-tomcat-9.0.94/bin
